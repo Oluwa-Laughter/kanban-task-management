@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <main className="flex min-h-screen flex-col items-center justify-center bg-light-grey px-4 dark:bg-very-dark-grey">
       <div className="mb-8 flex items-center">
         <Image
-          src="/assets/logo-light.svg"
+          src="/assets/logo-dark.svg"
           alt="kanban"
           width={153}
           height={26}
@@ -13,7 +13,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           priority
         />
         <Image
-          src="/assets/logo-dark.svg"
+          src="/assets/logo-light.svg"
           alt="kanban"
           width={153}
           height={26}

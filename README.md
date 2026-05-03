@@ -1,4 +1,4 @@
-# Frontend Mentor — Kanban task management web app
+# Frontend Mentor, Kanban task management web app
 
 A full-stack Kanban task management web app built with Next.js 16, TypeScript, Tailwind CSS v4, and Supabase. Solution to the [Frontend Mentor Kanban challenge](https://www.frontendmentor.io/challenges/kanban-task-management-web-app-wgQLt-HlbB).
 
@@ -108,15 +108,8 @@ src/
 
 ## Auth flow
 
-1. The `middleware.ts` calls `updateSession()` on every request to refresh the Supabase session cookie.
+1. The `proxy.ts` calls `updateSession()` on every request to refresh the Supabase session cookie.
 2. Unauthenticated requests to anything other than `/sign-in`, `/sign-up`, or `/auth/callback` redirect to `/sign-in`.
 3. Authenticated requests to `/sign-in` or `/sign-up` redirect to `/`.
 4. After sign-up the `signUpAction` calls `seedUserBoards()` so the new account starts with the sample boards.
 5. RLS policies on every table key off `auth.uid() = user_id`, so a misconfigured query simply returns nothing rather than leaking another user's data.
-
-## Notes
-
-- The original `starter-code/` and `kanban-task-management-web-app.fig` design files are kept in the repo root for reference. They are excluded from the build.
-- The seed step is idempotent — it only runs if the user has zero boards, so re-signing in won't duplicate data.
-- Drag-and-drop persists positions through `moveTaskAction`, which reflows positions in both the source and destination columns.
-- Email confirmation is **on** by default in Supabase. Either disable it (Authentication → Settings → "Confirm email") for instant sign-in, or click the confirmation link before signing in. The seed runs on first successful sign-in either way.

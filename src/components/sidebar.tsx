@@ -17,10 +17,10 @@ export function Sidebar({ boards }: Props) {
   if (!sidebarOpen) return null;
 
   return (
-    <aside className="hidden w-[260px] shrink-0 flex-col border-r border-lines-light bg-white pt-8 lg:flex xl:w-[300px] dark:border-lines-dark dark:bg-dark-grey">
+    <aside className="hidden w-65 shrink-0 flex-col border-r border-lines-light bg-white pt-8 lg:flex xl:w-75 dark:border-lines-dark dark:bg-dark-grey">
       <div className="px-8 pb-8">
         <Image
-          src="/assets/logo-light.svg"
+          src="/assets/logo-dark.svg"
           alt="kanban"
           width={153}
           height={26}
@@ -28,7 +28,7 @@ export function Sidebar({ boards }: Props) {
           priority
         />
         <Image
-          src="/assets/logo-dark.svg"
+          src="/assets/logo-light.svg"
           alt="kanban"
           width={153}
           height={26}
