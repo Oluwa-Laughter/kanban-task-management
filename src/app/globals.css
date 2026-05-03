@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@theme {
+  --color-purple: #635fc7;
+  --color-purple-hover: #a8a4ff;
+  --color-black: #000112;
+  --color-very-dark-grey: #20212c;
+  --color-dark-grey: #2b2c37;
+  --color-lines-dark: #3e3f4e;
+  /* Default (light-mode) value — darker than the Figma swatch so it actually
+     passes WCAG AA on the light backgrounds. Dark mode overrides below. */
+  --color-medium-grey: #5e6c80;
+  --color-medium-grey-soft: #828fa3;
+  --color-lines-light: #e4ebfa;
+  --color-light-grey: #f4f7fd;
+  --color-white: #ffffff;
+  --color-red: #ea5555;
+  --color-red-hover: #ff9898;
+
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --text-heading-xl: 1.5rem;
+  --text-heading-xl--line-height: 1.875rem;
+  --text-heading-xl--letter-spacing: 0;
+  --text-heading-xl--font-weight: 700;
+
+  --text-heading-l: 1.25rem;
+  --text-heading-l--line-height: 1.5625rem;
+  --text-heading-l--font-weight: 700;
+
+  --text-heading-m: 0.9375rem;
+  --text-heading-m--line-height: 1.1875rem;
+  --text-heading-m--font-weight: 700;
+
+  --text-heading-s: 0.75rem;
+  --text-heading-s--line-height: 0.9375rem;
+  --text-heading-s--letter-spacing: 0.15rem;
+  --text-heading-s--font-weight: 700;
+
+  --text-body-l: 0.8125rem;
+  --text-body-l--line-height: 1.4375rem;
+  --text-body-l--font-weight: 500;
+
+  --text-body-m: 0.75rem;
+  --text-body-m--line-height: 0.9375rem;
+  --text-body-m--font-weight: 700;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-body-l);
+    line-height: var(--text-body-l--line-height);
+    background-color: var(--color-light-grey);
+    color: var(--color-black);
+  }
+
+  .dark {
+    /* Restore the original Figma medium-grey for dark mode where the lighter
+       value reads better on dark backgrounds. */
+    --color-medium-grey: #828fa3;
+  }
+
+  .dark body {
+    background-color: var(--color-very-dark-grey);
+    color: var(--color-white);
+  }
+
+  /* Custom scrollbar - subtle */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-lines-light);
+    border-radius: 4px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: var(--color-lines-dark);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-purple px-6 py-2.5 text-[var(--text-body-m)] font-bold leading-[var(--text-body-m--line-height)] text-white transition-colors hover:bg-purple-hover disabled:cursor-not-allowed disabled:opacity-25;
+  }
+
+  .btn-primary-large {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-purple px-6 py-3.5 text-[var(--text-heading-m)] font-bold text-white transition-colors hover:bg-purple-hover disabled:cursor-not-allowed disabled:opacity-25;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-purple/10 px-6 py-2.5 text-[var(--text-body-m)] font-bold text-purple transition-colors hover:bg-purple/25 dark:bg-white dark:hover:bg-white;
+  }
+
+  .btn-destructive {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-red px-6 py-2.5 text-[var(--text-body-m)] font-bold text-white transition-colors hover:bg-red-hover;
+  }
+
+  .input {
+    @apply w-full rounded border border-medium-grey/25 bg-white px-4 py-2 text-[var(--text-body-l)] font-medium text-black placeholder:text-medium-grey/70 focus:border-purple focus:outline-none dark:border-lines-dark dark:bg-dark-grey dark:text-white dark:placeholder:text-white/40;
+  }
+
+  .input-error {
+    @apply border-red focus:border-red;
+  }
+
+  .label {
+    @apply block text-[var(--text-body-m)] font-bold text-medium-grey dark:text-white;
+  }
+}
