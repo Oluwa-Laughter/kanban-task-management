@@ -75,7 +75,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), create an account, and the app will seed your account with the sample boards from `src/data/seed.json` (the original starter `data.json`).
+Open [http://localhost:3000](http://localhost:3000), create an account, and start creating your boards right away.
 
 ## Project structure
 
@@ -111,5 +111,5 @@ src/
 1. The `proxy.ts` calls `updateSession()` on every request to refresh the Supabase session cookie.
 2. Unauthenticated requests to anything other than `/sign-in`, `/sign-up`, or `/auth/callback` redirect to `/sign-in`.
 3. Authenticated requests to `/sign-in` or `/sign-up` redirect to `/`.
-4. After sign-up the `signUpAction` calls `seedUserBoards()` so the new account starts with the sample boards.
+4. New accounts start empty — users create their own boards.
 5. RLS policies on every table key off `auth.uid() = user_id`, so a misconfigured query simply returns nothing rather than leaking another user's data.

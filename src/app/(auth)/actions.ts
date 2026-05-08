@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { seedUserBoards } from "@/lib/seed";
 
 export type AuthState = { error: string | null };
 
@@ -46,17 +45,14 @@ export async function signUpAction(
 
   if (error) return { error: error.message };
 
-  // If email confirmation is disabled, the user is signed in immediately and we
-  // can seed their account. Otherwise the seed runs on first sign-in.
+  // If email confirmation is disabled, the user is signed in immediately.
   if (data.user && data.session) {
-    await seedUserBoards(data.user.id);
     revalidatePath("/", "layout");
     redirect("/");
   }
 
   return {
-    error:
-      "Check your inbox for a confirmation link, then sign in to load your starter boards.",
+    error: "Check your inbox for a confirmation link, then sign in.",
   };
 }
 

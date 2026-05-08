@@ -13,7 +13,7 @@ export default function SignUpPage() {
     <>
       <h1 className="text-heading-l text-black dark:text-white">Create account</h1>
       <p className="mt-2 text-medium-grey">
-        Start organising your work. Your account is seeded with sample boards.
+        Start organising your work. Create your first board to get started.
       </p>
       <form action={formAction} className="mt-6 space-y-4">
         <div>
