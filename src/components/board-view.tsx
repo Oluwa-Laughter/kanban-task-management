@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -50,6 +50,7 @@ export function BoardView({ board }: Props) {
   );
 
   const [activeTask, setActiveTask] = useState<TaskWithSubs | null>(null);
+  const dragOrigin = useRef<{ columnId: string; index: number } | null>(null);
 
   function findColumnByTaskId(taskId: string) {
     return columns.find((c) => c.tasks.some((t) => t.id === taskId));
@@ -59,7 +60,13 @@ export function BoardView({ board }: Props) {
     const id = String(e.active.id);
     const col = findColumnByTaskId(id);
     const t = col?.tasks.find((t) => t.id === id);
-    if (t) setActiveTask(t);
+    if (t && col) {
+      dragOrigin.current = {
+        columnId: col.id,
+        index: col.tasks.findIndex((task) => task.id === id),
+      };
+      setActiveTask(t);
+    }
   }
 
   function onDragOver(e: DragOverEvent) {
@@ -98,37 +105,69 @@ export function BoardView({ board }: Props) {
 
   function onDragEnd(e: DragEndEvent) {
     setActiveTask(null);
+    const origin = dragOrigin.current;
+    dragOrigin.current = null;
     const { active, over } = e;
-    if (!over) return;
-    const activeId = String(active.id);
-    const overId = String(over.id);
 
-    const overCol =
-      columns.find((c) => c.id === overId) ??
-      columns.find((c) => c.tasks.some((t) => t.id === overId));
-    const fromCol = findColumnByTaskId(activeId);
-    if (!overCol || !fromCol) return;
-
-    let newIdx: number;
-    if (fromCol.id === overCol.id) {
-      const oldIdx = fromCol.tasks.findIndex((t) => t.id === activeId);
-      const overIdx = overCol.tasks.findIndex((t) => t.id === overId);
-      if (oldIdx === overIdx || overIdx === -1) return;
-      newIdx = overIdx;
-      setColumns((prev) =>
-        prev.map((c) =>
-          c.id === fromCol.id
-            ? { ...c, tasks: arrayMove(c.tasks, oldIdx, overIdx) }
-            : c
-        )
-      );
-    } else {
-      newIdx = overCol.tasks.findIndex((t) => t.id === activeId);
-      if (newIdx === -1) newIdx = overCol.tasks.length;
+    if (!over || !origin) {
+      setColumns(board.columns);
+      return;
     }
 
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const targetCol =
+      columns.find((c) => c.id === overId) ??
+      columns.find((c) => c.tasks.some((task) => task.id === overId));
+    const currentCol = findColumnByTaskId(activeId);
+
+    if (!targetCol || !currentCol) {
+      setColumns(board.columns);
+      return;
+    }
+
+    const currentIndex = currentCol.tasks.findIndex((task) => task.id === activeId);
+    let newIndex = currentIndex;
+
+    if (currentCol.id !== targetCol.id) {
+      // A keyboard drop can move columns without first firing onDragOver.
+      const overIndex = targetCol.tasks.findIndex((task) => task.id === overId);
+      newIndex = overIndex < 0 ? targetCol.tasks.length : overIndex;
+      setColumns((prev) => {
+        const moving = prev.find((c) => c.id === currentCol.id)?.tasks.find((task) => task.id === activeId);
+        if (!moving) return prev;
+        return prev.map((c) => {
+          if (c.id === currentCol.id) {
+            return { ...c, tasks: c.tasks.filter((task) => task.id !== activeId) };
+          }
+          if (c.id === targetCol.id) {
+            const updated = [...c.tasks];
+            updated.splice(newIndex, 0, { ...moving, column_id: targetCol.id });
+            return { ...c, tasks: updated };
+          }
+          return c;
+        });
+      });
+    } else if (origin.columnId === targetCol.id && overId !== targetCol.id) {
+      const overIndex = targetCol.tasks.findIndex((task) => task.id === overId);
+      if (overIndex >= 0 && currentIndex !== overIndex) {
+        newIndex = overIndex;
+        setColumns((prev) =>
+          prev.map((c) =>
+            c.id === targetCol.id
+              ? { ...c, tasks: arrayMove(c.tasks, currentIndex, overIndex) }
+              : c
+          )
+        );
+      }
+    }
+
+    // onDragOver already moves tasks optimistically between columns.
+    // Compare against the original location, not the moved task's current column.
+    if (origin.columnId === targetCol.id && origin.index === newIndex) return;
+
     startTransition(() => {
-      void moveTaskAction(activeId, overCol.id, newIdx);
+      void moveTaskAction(activeId, targetCol.id, newIndex);
     });
   }
 
@@ -145,6 +184,7 @@ export function BoardView({ board }: Props) {
       onDragEnd={onDragEnd}
       onDragCancel={() => {
         setActiveTask(null);
+        dragOrigin.current = null;
         setColumns(board.columns);
       }}
     >
