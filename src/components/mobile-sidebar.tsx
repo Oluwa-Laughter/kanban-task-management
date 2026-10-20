@@ -16,8 +16,13 @@ export function MobileSidebar({ boards }: Props) {
 
   useEffect(() => {
     if (!mobileSidebarOpen) return;
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileSidebarOpen(false);
+    };
+    document.addEventListener("keydown", onEscape);
     document.body.style.overflow = "hidden";
     return () => {
+      document.removeEventListener("keydown", onEscape);
       document.body.style.overflow = "";
     };
   }, [mobileSidebarOpen]);
@@ -26,6 +31,7 @@ export function MobileSidebar({ boards }: Props) {
 
   return (
     <div
+      id="mobile-board-picker"
       className="fixed inset-0 top-16 z-40 bg-black/50 lg:hidden"
       onClick={() => setMobileSidebarOpen(false)}
     >
@@ -43,6 +49,7 @@ export function MobileSidebar({ boards }: Props) {
               <li key={board.id}>
                 <Link
                   href={`/boards/${board.id}`}
+                  aria-current={active ? "page" : undefined}
                   onClick={() => setMobileSidebarOpen(false)}
                   className={`flex items-center gap-3 rounded-r-full pl-6 pr-6 py-3.5 text-heading-m ${
                     active

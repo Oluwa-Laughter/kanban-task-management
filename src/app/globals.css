@@ -49,6 +49,28 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-purple);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   html,
   body {
     height: 100%;
@@ -111,7 +133,7 @@
   }
 
   .input {
-    @apply w-full rounded border border-medium-grey/25 bg-white px-4 py-2 text-[var(--text-body-l)] font-medium text-black placeholder:text-medium-grey/70 focus:border-purple focus:outline-none dark:border-lines-dark dark:bg-dark-grey dark:text-white dark:placeholder:text-white/40;
+    @apply w-full rounded border border-medium-grey/25 bg-white px-4 py-2 text-[var(--text-body-l)] font-medium text-black placeholder:text-medium-grey/70 focus:border-purple focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple dark:border-lines-dark dark:bg-dark-grey dark:text-white dark:placeholder:text-white/40;
   }
 
   .input-error {

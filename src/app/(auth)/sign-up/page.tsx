@@ -42,7 +42,7 @@ export default function SignUpPage() {
           />
         </div>
         {state.error ? (
-          <p className="text-body-l font-medium text-red">{state.error}</p>
+          <p role="alert" className="text-body-l font-medium text-red">{state.error}</p>
         ) : null}
         <button type="submit" disabled={pending} className="btn-primary-large w-full">
           {pending ? "Creating account…" : "Sign up"}

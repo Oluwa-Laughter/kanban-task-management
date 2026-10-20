@@ -29,13 +29,20 @@ export function ViewTaskModal({ open, task, columns }: Props) {
 
   useEffect(() => {
     if (!menuOpen) return;
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onEscape);
     const onClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onEscape);
+    };
   }, [menuOpen]);
 
   if (!task) return null;
@@ -69,7 +76,7 @@ export function ViewTaskModal({ open, task, columns }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={closeModal}>
+    <Modal open={open} onClose={closeModal} title={task.title}>
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-heading-l text-black dark:text-white">
           {task.title}
@@ -78,8 +85,9 @@ export function ViewTaskModal({ open, task, columns }: Props) {
           <button
             type="button"
             aria-label="Task options"
+            aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex h-6 w-4 items-center justify-center"
+            className="flex h-10 w-10 items-center justify-center rounded-md"
           >
             <Icon name="icon-vertical-ellipsis" alt="" />
           </button>
@@ -126,7 +134,7 @@ export function ViewTaskModal({ open, task, columns }: Props) {
           <ul className="mt-4 space-y-2">
             {subs.map((s) => (
               <li key={s.id}>
-                <label className="flex items-start gap-4 rounded bg-light-grey p-3 hover:bg-purple/25 dark:bg-very-dark-grey">
+                <label className="flex cursor-pointer items-start gap-4 rounded bg-light-grey p-3 hover:bg-purple/25 focus-within:ring-2 focus-within:ring-purple dark:bg-very-dark-grey">
                   <span
                     className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
                       s.is_completed

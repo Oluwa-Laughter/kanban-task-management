@@ -82,7 +82,7 @@ export function TaskFormModal({
   }, [submittedAt, pending, state, closeModal]);
 
   return (
-    <Modal open={open} onClose={closeModal}>
+    <Modal open={open} onClose={closeModal} title={mode === "create" ? "Add New Task" : "Edit Task"}>
       <h2 className="text-heading-l text-black dark:text-white">
         {mode === "create" ? "Add New Task" : "Edit Task"}
       </h2>
@@ -132,6 +132,7 @@ export function TaskFormModal({
                 />
                 <input
                   type="text"
+                  aria-label={`Subtask ${idx + 1}`}
                   name="subtaskTitle"
                   value={s.title}
                   onChange={(e) =>
@@ -148,11 +149,11 @@ export function TaskFormModal({
                 />
                 <button
                   type="button"
-                  aria-label="Remove subtask"
+                  aria-label={`Remove subtask ${idx + 1}`}
                   onClick={() =>
                     setSubs((prev) => prev.filter((_, i) => i !== idx))
                   }
-                  className="text-medium-grey hover:text-red"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-medium-grey hover:text-red"
                 >
                   <Icon name="icon-cross" alt="" />
                 </button>
@@ -191,7 +192,7 @@ export function TaskFormModal({
         </div>
 
         {state.error ? (
-          <p className="text-body-l text-red">{state.error}</p>
+          <p role="alert" className="text-body-l text-red">{state.error}</p>
         ) : null}
 
         <button type="submit" disabled={pending} className="btn-primary w-full">

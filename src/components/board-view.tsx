@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import {
   DndContext,
   PointerSensor,
+  KeyboardSensor,
+  useDroppable,
   useSensor,
   useSensors,
   closestCorners,
@@ -17,6 +19,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
   arrayMove,
+  sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useUi } from "./ui-store";
@@ -42,10 +45,12 @@ export function BoardView({ board }: Props) {
   useMemoSync(board.columns, setColumns);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const [activeTask, setActiveTask] = useState<TaskWithSubs | null>(null);
+  const dragOrigin = useRef<{ columnId: string; index: number } | null>(null);
 
   function findColumnByTaskId(taskId: string) {
     return columns.find((c) => c.tasks.some((t) => t.id === taskId));
@@ -55,7 +60,13 @@ export function BoardView({ board }: Props) {
     const id = String(e.active.id);
     const col = findColumnByTaskId(id);
     const t = col?.tasks.find((t) => t.id === id);
-    if (t) setActiveTask(t);
+    if (t && col) {
+      dragOrigin.current = {
+        columnId: col.id,
+        index: col.tasks.findIndex((task) => task.id === id),
+      };
+      setActiveTask(t);
+    }
   }
 
   function onDragOver(e: DragOverEvent) {
@@ -94,37 +105,69 @@ export function BoardView({ board }: Props) {
 
   function onDragEnd(e: DragEndEvent) {
     setActiveTask(null);
+    const origin = dragOrigin.current;
+    dragOrigin.current = null;
     const { active, over } = e;
-    if (!over) return;
-    const activeId = String(active.id);
-    const overId = String(over.id);
 
-    const overCol =
-      columns.find((c) => c.id === overId) ??
-      columns.find((c) => c.tasks.some((t) => t.id === overId));
-    const fromCol = findColumnByTaskId(activeId);
-    if (!overCol || !fromCol) return;
-
-    let newIdx: number;
-    if (fromCol.id === overCol.id) {
-      const oldIdx = fromCol.tasks.findIndex((t) => t.id === activeId);
-      const overIdx = overCol.tasks.findIndex((t) => t.id === overId);
-      if (oldIdx === overIdx || overIdx === -1) return;
-      newIdx = overIdx;
-      setColumns((prev) =>
-        prev.map((c) =>
-          c.id === fromCol.id
-            ? { ...c, tasks: arrayMove(c.tasks, oldIdx, overIdx) }
-            : c
-        )
-      );
-    } else {
-      newIdx = overCol.tasks.findIndex((t) => t.id === activeId);
-      if (newIdx === -1) newIdx = overCol.tasks.length;
+    if (!over || !origin) {
+      setColumns(board.columns);
+      return;
     }
 
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const targetCol =
+      columns.find((c) => c.id === overId) ??
+      columns.find((c) => c.tasks.some((task) => task.id === overId));
+    const currentCol = findColumnByTaskId(activeId);
+
+    if (!targetCol || !currentCol) {
+      setColumns(board.columns);
+      return;
+    }
+
+    const currentIndex = currentCol.tasks.findIndex((task) => task.id === activeId);
+    let newIndex = currentIndex;
+
+    if (currentCol.id !== targetCol.id) {
+      // A keyboard drop can move columns without first firing onDragOver.
+      const overIndex = targetCol.tasks.findIndex((task) => task.id === overId);
+      newIndex = overIndex < 0 ? targetCol.tasks.length : overIndex;
+      setColumns((prev) => {
+        const moving = prev.find((c) => c.id === currentCol.id)?.tasks.find((task) => task.id === activeId);
+        if (!moving) return prev;
+        return prev.map((c) => {
+          if (c.id === currentCol.id) {
+            return { ...c, tasks: c.tasks.filter((task) => task.id !== activeId) };
+          }
+          if (c.id === targetCol.id) {
+            const updated = [...c.tasks];
+            updated.splice(newIndex, 0, { ...moving, column_id: targetCol.id });
+            return { ...c, tasks: updated };
+          }
+          return c;
+        });
+      });
+    } else if (origin.columnId === targetCol.id && overId !== targetCol.id) {
+      const overIndex = targetCol.tasks.findIndex((task) => task.id === overId);
+      if (overIndex >= 0 && currentIndex !== overIndex) {
+        newIndex = overIndex;
+        setColumns((prev) =>
+          prev.map((c) =>
+            c.id === targetCol.id
+              ? { ...c, tasks: arrayMove(c.tasks, currentIndex, overIndex) }
+              : c
+          )
+        );
+      }
+    }
+
+    // onDragOver already moves tasks optimistically between columns.
+    // Compare against the original location, not the moved task's current column.
+    if (origin.columnId === targetCol.id && origin.index === newIndex) return;
+
     startTransition(() => {
-      void moveTaskAction(activeId, overCol.id, newIdx);
+      void moveTaskAction(activeId, targetCol.id, newIndex);
     });
   }
 
@@ -139,7 +182,16 @@ export function BoardView({ board }: Props) {
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
+      onDragCancel={() => {
+        setActiveTask(null);
+        dragOrigin.current = null;
+        setColumns(board.columns);
+      }}
     >
+      <p className="sr-only">
+        Move tasks using their drag handles. Press Space to pick up a task,
+        use the arrow keys to move it, press Space again to drop it, or Escape to cancel.
+      </p>
       <div className="flex h-full gap-6 overflow-x-auto p-6">
         {columns.map((col, idx) => (
           <Column key={col.id} column={col} dotColor={columnDotColor(idx)} />
@@ -198,17 +250,30 @@ function DroppableColumn({
   columnId: string;
   children: React.ReactNode;
 }) {
-  const { setNodeRef } = useSortable({ id: columnId, disabled: true });
+  const { setNodeRef, isOver } = useDroppable({ id: columnId });
   return (
-    <div ref={setNodeRef} className="flex flex-col gap-5 pb-12">
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex min-h-20 flex-col gap-5 rounded-md pb-12 transition-colors",
+        isOver && "bg-purple/10"
+      )}
+    >
       {children}
     </div>
   );
 }
 
 function SortableTask({ task }: { task: TaskWithSubs }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: task.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -217,8 +282,21 @@ function SortableTask({ task }: { task: TaskWithSubs }) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} className="relative">
       <TaskCard task={task} />
+      <button
+        ref={setActivatorNodeRef}
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label={`Drag ${task.title} to reorder`}
+        className={cn(
+          "absolute right-2 top-3 z-10 flex h-10 w-10 touch-none items-center justify-center rounded-md text-medium-grey hover:bg-purple/10 hover:text-purple focus-visible:outline-2 focus-visible:outline-purple dark:hover:bg-white/10",
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        )}
+      >
+        <span aria-hidden="true" className="text-xl leading-none">⠿</span>
+      </button>
     </div>
   );
 }
@@ -231,12 +309,12 @@ function TaskCard({ task, dragging }: { task: TaskWithSubs; dragging?: boolean }
   return (
     <button
       type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        openModal({ kind: "view-task", taskId: task.id });
-      }}
+      disabled={dragging}
+      tabIndex={dragging ? -1 : undefined}
+      aria-hidden={dragging ? true : undefined}
+      onClick={() => openModal({ kind: "view-task", taskId: task.id })}
       className={cn(
-        "group block w-full rounded-lg bg-white px-4 py-6 text-left shadow-sm transition-shadow hover:shadow-md dark:bg-dark-grey",
+        "group block w-full rounded-lg bg-white py-6 pl-4 pr-14 text-left shadow-sm transition-shadow hover:shadow-md dark:bg-dark-grey",
         dragging && "rotate-2 cursor-grabbing shadow-lg"
       )}
     >

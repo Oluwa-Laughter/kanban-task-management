@@ -61,7 +61,7 @@ export function Sidebar({ boards }: Props) {
     pathname: string;
   }) {
     return (
-      <nav className="flex-1 overflow-y-auto pr-6">
+      <nav aria-label="Boards" className="flex-1 overflow-y-auto pr-6">
         <p className="mb-5 pl-8 text-heading-s uppercase tracking-[2.4px] text-medium-grey">
           All Boards ({boards.length})
         </p>
@@ -72,6 +72,7 @@ export function Sidebar({ boards }: Props) {
               <li key={board.id}>
                 <Link
                   href={`/boards/${board.id}`}
+                  aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-r-full pl-8 pr-6 py-3.5 text-heading-m ${
                     active
                       ? "bg-purple text-white"

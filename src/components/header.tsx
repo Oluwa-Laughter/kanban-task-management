@@ -18,13 +18,20 @@ export function Header({ board }: Props) {
 
   useEffect(() => {
     if (!menuOpen) return;
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onEscape);
     const onClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onEscape);
+    };
   }, [menuOpen]);
 
   const canAddTask = (board?.columns.length ?? 0) > 0;
@@ -40,22 +47,26 @@ export function Header({ board }: Props) {
           priority
         />
       </div>
-      <div className="flex flex-1 items-center gap-2 pl-4 lg:pl-0">
+      <div className="flex min-w-0 flex-1 items-center gap-2 pl-4 lg:pl-0">
         <button
           type="button"
+          aria-label="Choose a board"
+          aria-expanded={mobileSidebarOpen}
+          aria-controls="mobile-board-picker"
           onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-          className="flex items-center gap-2 lg:cursor-default"
+          className="flex min-w-0 items-center gap-2 lg:hidden"
         >
-          <h1 className="truncate text-heading-l text-black dark:text-white sm:text-heading-xl">
+          <span className="truncate text-heading-l text-black dark:text-white sm:text-heading-xl">
             {board?.name ?? "No board selected"}
-          </h1>
-          <span className="lg:hidden">
-            <Icon
-              name={mobileSidebarOpen ? "icon-chevron-up" : "icon-chevron-down"}
-              alt=""
-            />
           </span>
+          <Icon
+            name={mobileSidebarOpen ? "icon-chevron-up" : "icon-chevron-down"}
+            alt=""
+          />
         </button>
+        <h1 className="hidden truncate text-heading-xl text-black dark:text-white lg:block">
+          {board?.name ?? "No board selected"}
+        </h1>
       </div>
       <div className="flex items-center gap-4">
         <button
@@ -81,13 +92,15 @@ export function Header({ board }: Props) {
             <button
               type="button"
               aria-label="Board options"
+              aria-expanded={menuOpen}
+              aria-controls="board-options"
               onClick={() => setMenuOpen((v) => !v)}
-              className="flex h-8 w-4 items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center rounded-md"
             >
               <Icon name="icon-vertical-ellipsis" alt="" />
             </button>
             {menuOpen ? (
-              <div className="absolute right-0 top-full mt-4 w-48 space-y-4 rounded-lg bg-white p-4 shadow-lg dark:bg-very-dark-grey">
+              <div id="board-options" className="absolute right-0 top-full z-20 mt-2 w-48 space-y-4 rounded-lg bg-white p-4 shadow-lg dark:bg-very-dark-grey">
                 <button
                   type="button"
                   onClick={() => {
