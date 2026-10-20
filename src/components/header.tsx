@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { useUi } from "./ui-store";
 import { Icon } from "./icons";
+import { signOutAction } from "@/app/(auth)/actions";
 import type { BoardWithColumns } from "@/lib/supabase/types";
 
 type Props = {
@@ -115,6 +116,14 @@ export function Header({ board }: Props) {
             ) : null}
           </div>
         ) : null}
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            className="whitespace-nowrap rounded-full px-2 py-2 text-heading-m text-medium-grey transition-colors hover:text-purple focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple sm:px-3"
+          >
+            Log out
+          </button>
+        </form>
       </div>
     </header>
   );
