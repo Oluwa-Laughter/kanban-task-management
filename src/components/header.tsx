@@ -64,7 +64,7 @@ export function Header({ board }: Props) {
             alt=""
           />
         </button>
-        <h1 className="hidden truncate text-heading-xl text-black dark:block dark:text-white lg:block">
+        <h1 className="hidden truncate text-heading-xl text-black dark:text-white lg:block">
           {board?.name ?? "No board selected"}
         </h1>
       </div>
