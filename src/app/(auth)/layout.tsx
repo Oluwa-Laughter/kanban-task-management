@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -23,6 +24,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-sm dark:bg-dark-grey">
         {children}
+      </div>
+      <div className="mt-6 flex w-full max-w-md flex-col items-center gap-2">
+        <p className="text-body-m text-medium-grey">Appearance</p>
+        <ThemeToggle />
       </div>
     </main>
   );

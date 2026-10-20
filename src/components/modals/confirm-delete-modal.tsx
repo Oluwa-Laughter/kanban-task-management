@@ -31,7 +31,7 @@ export function ConfirmDeleteModal({ open, kind, id, name }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={closeModal}>
+    <Modal open={open} onClose={closeModal} title={`Delete ${kind}`}>
       <h2 className="text-heading-l text-red">
         Delete this {isBoard ? "board" : "task"}?
       </h2>

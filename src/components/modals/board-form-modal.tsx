@@ -61,7 +61,7 @@ export function BoardFormModal({
   }, [state, mode, closeModal]);
 
   return (
-    <Modal open={open} onClose={closeModal}>
+    <Modal open={open} onClose={closeModal} title={mode === "create" ? "Add New Board" : "Edit Board"}>
       <h2 className="text-heading-l text-black dark:text-white">
         {mode === "create" ? "Add New Board" : "Edit Board"}
       </h2>
@@ -93,6 +93,7 @@ export function BoardFormModal({
                 />
                 <input
                   type="text"
+                  aria-label={`Column ${idx + 1}`}
                   name="columnName"
                   value={col.name}
                   onChange={(e) =>
@@ -109,11 +110,11 @@ export function BoardFormModal({
                 />
                 <button
                   type="button"
-                  aria-label="Remove column"
+                  aria-label={`Remove column ${idx + 1}`}
                   onClick={() =>
                     setColumns((prev) => prev.filter((_, i) => i !== idx))
                   }
-                  className="text-medium-grey hover:text-red"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-medium-grey hover:text-red"
                 >
                   <Icon name="icon-cross" alt="" />
                 </button>
@@ -132,7 +133,7 @@ export function BoardFormModal({
         </div>
 
         {state.error ? (
-          <p className="text-body-l text-red">{state.error}</p>
+          <p role="alert" className="text-body-l text-red">{state.error}</p>
         ) : null}
 
         <button type="submit" disabled={pending} className="btn-primary w-full">
